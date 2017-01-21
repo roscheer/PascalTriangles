@@ -9,5 +9,9 @@ sending the response. To request a new triangle, the connection needs to be rest
 
 To test the service, launch it and use the ncat command: 
     $ ncat localhost port_number 
+    
 If not informed when launching the service, the port_number defaults to 55555. Remeber to stop and restart ncat for each new request, as the server closes the connection after it replies.
+
+Possible improvement:
+    Continue to process requests until the client closes the connection.
 
