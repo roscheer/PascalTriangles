@@ -12,6 +12,7 @@ To test the service, launch it and use the ncat command:
     
 If not informed when launching the service, the port_number defaults to 55555. Remeber to stop and restart ncat for each new request, as the server closes the connection after it replies.
 
-Possible improvement:
+Possible improvements:
     Continue to process requests until the client closes the connection.
+    Print error messages to stderr.
 
