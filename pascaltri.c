@@ -52,6 +52,7 @@ void handleclient( int sockchld) {
   if ( result <= 0) {
     // Complain on error, but leave server running
     printf( "Read returned error or empty  data!\n");
+    close( sockchld);
     return;
   }
 
@@ -123,6 +124,7 @@ int main(int argc, char* argv[])
 
   sessid = setsid();
   if(sessid < 0) {
+    printf( "Unable to create new daemon session\n");
     exit(1);
   }
 
@@ -138,7 +140,7 @@ int main(int argc, char* argv[])
       exit(1);
     }
 
-   procid = fork();
+    procid = fork();
     if (procid < 0) {
       printf( "Forking of client handler process failed!\n");
       exit(1);
