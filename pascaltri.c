@@ -22,50 +22,62 @@
 
 
 // Generates a pascal triangle in printable format, including newline characters
-int computetriangle( char *buffer, int rows)
+int computetriangle( char *buffer, const int bufsz, const int rows)
 {
-  int n, k, prntsz;
+  int n, k, prntsz,buffersz;
+  int resultsz = 0;
   long value; // Use long as numbers can be large
   char *bufptr = buffer;
   
-  for( n =0; n < rows; n++) {
+  buffersz = bufsz - 2; //Leave room for final newline and null char
+  for( n = 0; n < rows && resultsz < buffersz; n++) {
      value = 1;
      for ( k =0; k <= n; k++) {
-       prntsz = sprintf(bufptr, "%ld ", value);
+       prntsz = snprintf(bufptr, buffersz - resultsz, "%ld ", value);
        value = value * (n - k) / (k + 1);
        bufptr += prntsz;
+       resultsz = bufptr - buffer;
      }
-     sprintf(bufptr, "\n");
+     snprintf(bufptr, 2, "\n");
      bufptr++;
+     resultsz++;
   }
-  return bufptr - buffer;
+  return resultsz > bufsz ? -1 : resultsz;
 }
 
 // Handle one client request
 void handleclient( int sockchld) {
-  char buffer[ 256] = {0};
-  char bufferout[ 1024];
-  int result, number;
+  char buffer[ 256] = {0};  // Clean it to ensure will have trailing null char
+  char bufferout[ 4096];    // To find out the exact triangle size, we need to generate it,
+                            // so use a large buffer just to be safe
+  int result, number, triangsz;
 
 
-  result = read( sockchld, buffer, sizeof( buffer));
-  if ( result <= 0) {
-    // Complain on error, but leave server running
-    printf( "Read returned error or empty  data!\n");
-    close( sockchld);
-    return;
-  }
-
-  number = atoi( buffer);
-  if ( number <= 0 ) {
-    result = sprintf( bufferout, "Expecting to receive a number! Received: %s\n", buffer);
-  } else {
-    result = computetriangle( bufferout, number);
-  }
+  while ( ( result = read( sockchld, buffer, sizeof( buffer) - 1)) > 0 ) {
+    number = atoi( buffer);
+    if ( number <= 0 ) {
+      triangsz = sprintf( bufferout, "Expecting to receive number of lines! Received: %s\n", buffer);
+    } else {
+      triangsz = computetriangle( bufferout, sizeof(bufferout), number);
+    }
     
-  write( sockchld, bufferout, result);
+    if (triangsz < 0) {
+      triangsz = sprintf( bufferout, "Resulting triangle exceeded %d chars\n", 
+                         (int) sizeof(bufferout));
+    }
+        
+    write( sockchld, bufferout, triangsz);
+    memset( buffer, 0x00, sizeof(buffer));
+  }
 
   close( sockchld);
+  if ( result < 0) {
+    // Abort working process with error
+    printf( "Read returned error %d!\n", errno);
+    exit( -1);
+  }
+
+  exit( 0);
 }
 
 int main(int argc, char* argv[])
@@ -150,8 +162,7 @@ int main(int argc, char* argv[])
       // Go to wait for next client connection
       close( sockchld);
     } else {
-      handleclient( sockchld);
-      exit( 0);
+      handleclient( sockchld);  // Does not return
     }
   }
 }
