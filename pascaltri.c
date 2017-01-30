@@ -73,7 +73,7 @@ void handleclient( int sockchld) {
   close( sockchld);
   if ( result < 0) {
     // Abort working process with error
-    printf( "Read returned error %d!\n", errno);
+    fprintf( stderr, "Read returned error %d!\n", errno);
     exit( -1);
   }
 
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
   // Do most of the sock setup to validate network before going daemon
   socklisten = socket( AF_INET, SOCK_STREAM, 0);
   if ( socklisten < 0) {
-    printf("Error %d opening socketd!\n", errno);
+    fprintf( stderr, "Error %d opening socketd!\n", errno);
     exit(1);
   }
 
@@ -112,19 +112,19 @@ int main(int argc, char* argv[])
   ipaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   
   if ( bind( socklisten, (struct sockaddr *)&ipaddr, sizeof(struct sockaddr_in)) < 0) {
-    printf("Error %d binding socketd!\n", errno);
+    fprintf( stderr, "Error %d binding socketd!\n", errno);
     exit(1);
   }
   
   if ( listen( socklisten, 100) < 0 ) {
-    printf("Error %d setting socket to listen!\n", errno);
+    fprintf( stderr, "Error %d setting socket to listen!\n", errno);
     exit(1);
   }
 
   // Make it a daemon by detaching and setting a new session id
   procid = fork();
   if (procid < 0) {
-    printf( "Fork failed!\n");
+    fprintf( stderr, "Fork failed!\n");
     exit(1);
   }
   
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 
   sessid = setsid();
   if(sessid < 0) {
-    printf( "Unable to create new daemon session\n");
+    fprintf( stderr, "Unable to create new daemon session\n");
     exit(1);
   }
 
@@ -148,13 +148,13 @@ int main(int argc, char* argv[])
     
     sockchld = accept( socklisten, NULL, NULL);
     if ( sockchld < 0 ) {
-      printf("Accept returned error %d!\n", errno);
+      fprintf( stderr, "Accept returned error %d!\n", errno);
       exit(1);
     }
 
     procid = fork();
     if (procid < 0) {
-      printf( "Forking of client handler process failed!\n");
+      fprintf( stderr, "Forking of client handler process failed!\n");
       exit(1);
     }
     
